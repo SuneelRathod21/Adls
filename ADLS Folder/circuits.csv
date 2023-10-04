@@ -1,0 +1,9 @@
+Date,Emp_name,Emp_ID,Status,Remarks
+26-09-2023,SUNEEL RATHOD,INT-722,"1) Validate updated manual SharePoint data for automatic shipment tracking and day RM budgets file.
+2) Checked the data in processed layer for dim_product and fact_automatic_shipement_tracking table 
+with respect to yesterday's date.
+3) Connected with Basha and updated failure for SFTP files, To remove the one extra empty column
+from PROCESS_AUDIT_SBU1_20230925_130000.csv File.
+4) Worked on creating a measure for business reports for FY 2019, 2020, 2021, 2022 and 2022 for 
+gross sales and net sales did few modification as per the requirement.
+5) Completed POSH certificate training.",
