@@ -1,0 +1,30 @@
+{
+	"name": "LS_WW_Cpy_City",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_WW_CPY_City",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Date",
+				"type": "date"
+			},
+			{
+				"name": "Client",
+				"type": "nvarchar"
+			},
+			{
+				"name": "sales",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "sales",
+			"table": "june_2020"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

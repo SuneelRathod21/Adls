@@ -1,0 +1,119 @@
+{
+	"name": "AAS Data Process",
+	"properties": {
+		"activities": [
+			{
+				"name": "AAS stop",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "AAS Data Refresh",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"httpRequestTimeout": "",
+					"url": "https://management.azure.com/subscriptions/4ee33852-3caa-4709-98b1-6adc91450f94/resourceGroups/sun-rg/providers/Microsoft.AnalysisServices/servers/azrraas/Suspend?api-version=2017-08-01",
+					"body": {
+						"Dummy": "Dummy"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com/"
+					}
+				}
+			},
+			{
+				"name": "AAS Start",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": "https://management.azure.com/subscriptions/4ee33852-3caa-4709-98b1-6adc91450f94/resourceGroups/sun-rg/providers/Microsoft.AnalysisServices/servers/azrraas/resume?api-version=2017-08-01",
+					"body": {
+						"Dummy": "Dummy"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.azure.com/"
+					}
+				}
+			},
+			{
+				"name": "AAS Data Refresh",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "pipeline1",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/suneel1ga19cs161_gmail.com#ext#@suneel1ga19cs161gmail.onmicrosoft.com/lnd/AAS Data refresh"
+				},
+				"linkedServiceName": {
+					"referenceName": "azr_dbr_LS",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "pipeline1",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "AAS Start",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "AAS_Data_Refresh_pipline",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "Utility"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-03-26T09:19:05Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

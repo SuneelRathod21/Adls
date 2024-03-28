@@ -1,0 +1,11 @@
+{
+	"name": "ls_fetch_sql_table",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://ddlake.dfs.core.windows.net"
+		}
+	}
+}

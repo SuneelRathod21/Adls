@@ -1,0 +1,132 @@
+{
+	"name": "Copy_sales_jsonfile_adls",
+	"properties": {
+		"activities": [
+			{
+				"name": "LKP_Cities_to_process",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "cities_to_process",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For_Each_Cities_to_process",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LKP_Cities_to_process",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LKP_Cities_to_process').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_to_city",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "select\n    inv.CustomerID,\n    inv.InvoiceID,\n    inv.OrderID,\n    inv.InvoiceDate,\n    cus.PostalCityID [CustomerPostalCityID],\n    ci.CityName [CustomerCityName],\n    ci.cityId [CustomerCityID]\nfrom Sales.Invoices inv\n    inner join Sales.Customers cus\n    on cus.CustomerID = inv.CustomerID\n    inner join Application.Cities ci\n    on ci.CityID = cus.PostalCityID\n    where ci.CityID =@{item().CityId}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "LS_WW_Cpy_City",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "City_Name",
+									"type": "DatasetReference",
+									"parameters": {
+										"temp_container": {
+											"value": "@pipeline().parameters.temp_container",
+											"type": "Expression"
+										},
+										"FileName": {
+											"value": "@item().CityName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"temp_container": {
+				"type": "string",
+				"defaultValue": "ww-temp-demo-container"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-03-25T09:55:21Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

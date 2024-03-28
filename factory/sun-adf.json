@@ -1,0 +1,9 @@
+{
+	"name": "sun-adf",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "2f39b798-f110-4d96-81fa-7e81365fe821",
+		"tenantId": "d9c2a9ce-ad99-4b34-96aa-de07f4331443"
+	}
+}

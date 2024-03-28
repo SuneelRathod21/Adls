@@ -1,0 +1,47 @@
+{
+	"name": "Delivery_info",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "delivery-info.zip",
+				"fileSystem": "metadata-container-dev"
+			},
+			"compression": {
+				"type": "ZipDeflate"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"InvoiceId": {
+					"type": "integer"
+				},
+				"DeliveryStatus": {
+					"type": "string"
+				},
+				"DeliveryDate": {
+					"type": "string"
+				},
+				"DeliveryLocation": {
+					"type": "object",
+					"properties": {
+						"Latitude": {
+							"type": "string"
+						},
+						"Longitude": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

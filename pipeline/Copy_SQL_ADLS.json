@@ -1,0 +1,155 @@
+{
+	"name": "Copy_SQL_ADLS",
+	"properties": {
+		"activities": [
+			{
+				"name": "LkP Metadata_table",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select * from metadata.table_meta",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureSqlTable1",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "For each city",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LkP Metadata_table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LkP Metadata_table').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Copy_lkp_adls_blob",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "SELECT s.SupplierID,\n       s.SupplierName,\n       sc.SupplierCategoryName,\n       pp.FullName AS PrimaryContact,\n       ap.FullName AS AlternateContact,\n       s.PhoneNumber,\n       s.FaxNumber,\n       s.WebsiteURL,\n       c.CityName AS CityName,\n       s.SupplierReference\nFROM Purchasing.Suppliers AS s\nLEFT OUTER JOIN Purchasing.SupplierCategories AS sc\nON s.SupplierCategoryID = sc.SupplierCategoryID\nLEFT OUTER JOIN [Application].People AS pp\nON s.PrimaryContactPersonID = pp.PersonID\nLEFT OUTER JOIN [Application].People AS ap\nON s.AlternateContactPersonID = ap.PersonID\nLEFT OUTER JOIN [Application].DeliveryMethods AS dm\nON s.DeliveryMethodID = dm.DeliveryMethodID\nLEFT OUTER JOIN [Application].Cities AS c\nON s.DeliveryCityID = c.CityID\nwhere c.CityID = @{item().CityID}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "AzureSqlTable1",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Parquet1",
+									"type": "DatasetReference",
+									"parameters": {
+										"sql_teable_container": {
+											"value": "@pipeline().parameters.sql_teable_container",
+											"type": "Expression"
+										},
+										"File_name": {
+											"value": "@item().CityName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "emp_cust_upsert",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy_lkp_adls_blob",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[Upsert_Merge]"
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_WW_CPY_City",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"sql_teable_container": {
+				"type": "string",
+				"defaultValue": "ww-temp-demo-container"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-03-25T06:34:46Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
